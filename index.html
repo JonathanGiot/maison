@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maison</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --blue: #007aff;
+    --background: #f2f2f7;
+    --card: #ffffff;
+    --text: #1c1c1e;
+    --secondary: #8e8e93;
+    --border: #e5e5ea;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--background);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* HEADER */
+
+header {
+    padding: 24px 20px 18px;
+    background: rgba(255,255,255,0.94);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 750;
+    letter-spacing: -0.7px;
+}
+
+.subtitle {
+    color: var(--secondary);
+    margin-top: 3px;
+    font-size: 15px;
+}
+
+/* CONTENU */
+
+main {
+    padding: 18px 16px 110px;
+    max-width: 600px;
+    margin: auto;
+}
+
+.ecran {
+    display: none;
+}
+
+.ecran.actif {
+    display: block;
+    animation: apparition 0.2s ease;
+}
+
+@keyframes apparition {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* CARTES */
+
+.card,
+.jour {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.035);
+}
+
+.card h2 {
+    margin: 0 0 15px;
+    font-size: 20px;
+    letter-spacing: -0.3px;
+}
+
+/* CHAMPS */
+
+input,
+select {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 16px;
+    background: white;
+    color: var(--text);
+    outline: none;
+}
+
+input:focus,
+select:focus {
+    border-color: var(--blue);
+}
+
+.ajout {
+    display: flex;
+    gap: 9px;
+}
+
+.ajout input {
+    flex: 1;
+}
+
+/* BOUTONS */
+
+button {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 15px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #e9e9ee;
+    color: var(--text);
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+.ajouter {
+    background: var(--blue);
+    color: white;
+}
+
+.supprimer {
+    background: #f2f2f7;
+}
+
+/* COURSES */
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 0;
+}
+
+li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+li:last-child {
+    border-bottom: none;
+}
+
+li span {
+    flex: 1;
+    font-size: 17px;
+}
+
+li.achete span {
+    text-decoration: line-through;
+    color: var(--secondary);
+}
+
+li input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    flex: none;
+    accent-color: var(--blue);
+}
+
+/* PLANNING */
+
+.navigation-semaine {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 7px;
+    margin-bottom: 15px;
+}
+
+.navigation-semaine button {
+    background: white;
+    padding: 10px 8px;
+    font-size: 13px;
+}
+
+.navigation-semaine button:last-child {
+    justify-self: stretch;
+}
+
+.jour {
+    padding: 17px;
+}
+
+.jour-aujourdhui {
+    border: 2px solid var(--blue);
+}
+
+.nom-jour {
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: -0.2px;
+}
+
+.date-jour {
+    color: var(--secondary);
+    font-size: 14px;
+    margin-top: 2px;
+}
+
+.aujourdhui-label {
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.repas-ligne {
+    display: flex;
+    gap: 10px;
+    margin-top: 13px;
+}
+
+.message-vide {
+    color: var(--secondary);
+}
+
+/* NAVIGATION DU BAS */
+
+nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    display: flex;
+    justify-content: space-around;
+
+    padding: 9px 0 calc(10px + env(safe-area-inset-bottom));
+
+    background: rgba(255,255,255,0.96);
+    border-top: 1px solid var(--border);
+
+    z-index: 100;
+}
+
+.nav-item {
+    width: 33%;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--secondary);
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.nav-item.actif {
+    color: var(--blue);
+    font-weight: 650;
+}
+
+.icon {
+    font-size: 24px;
+    margin-bottom: 2px;
+}
+
+.nav-item.actif .icon {
+    transform: scale(1.08);
+}
+/* FENÊTRE CHOIX REPAS */
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 1000;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.modal-overlay.visible {
+    display: flex;
+}
+
+.modal {
+    width: 100%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+
+    background: #f2f2f7;
+
+    border-radius: 24px 24px 0 0;
+
+    padding: 20px 16px
+        calc(25px + env(safe-area-inset-bottom));
+
+    animation: monterModal 0.25s ease;
+}
+
+@keyframes monterModal {
+
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+.modal-entete {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.modal-entete h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.fermer-modal {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+}
+
+.choix-repas {
+    width: 100%;
+    background: white;
+    text-align: left;
+
+    padding: 16px;
+    margin-bottom: 8px;
+
+    font-size: 17px;
+    border-radius: 14px;
+}
+
+.choix-repas-selectionne {
+    border: 2px solid #007aff;
+}
+
+.bouton-autre {
+    width: 100%;
+    margin-top: 10px;
+    background: white;
+}
+
+.bouton-supprimer-repas {
+    width: 100%;
+    margin-top: 10px;
+    background: white;
+    color: #ff3b30;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🏠 Maison</h1>
+    <div class="subtitle" id="titrePage">Liste de courses</div>
+</header>
+
+<main>
+
+    <!-- COURSES -->
+
+    <section id="courses" class="ecran actif">
+        <div class="card">
+            <h2>🛒 Liste de courses</h2>
+
+            <div class="ajout">
+                <input id="nouveauProduit"
+                       type="text"
+                       placeholder="Ajouter un produit...">
+
+                <button class="ajouter"
+                        onclick="ajouterProduit()">+</button>
+            </div>
+
+            <ul id="listeCourses"></ul>
+        </div>
+    </section>
+
+
+    <!-- SEMAINE -->
+
+    <section id="semaine" class="ecran">
+
+        <div class="navigation-semaine">
+
+            <button onclick="changerSemaine(-1)">
+                ‹ Précédente
+            </button>
+
+            <button onclick="semaineActuelle()">
+                Aujourd'hui
+            </button>
+
+            <button onclick="changerSemaine(1)">
+                Suivante ›
+            </button>
+
+        </div>
+
+        <div id="calendrier"></div>
+
+    </section>
+
+
+    <!-- REPAS -->
+
+    <section id="repas" class="ecran">
+
+    <div class="card">
+        <h2>🍽️ Ajouter un repas</h2>
+
+        <input
+            id="nomRepas"
+            type="text"
+            placeholder="Nom du repas..."
+        >
+
+        <div style="height:10px"></div>
+
+        <input
+            id="ingredientsRepas"
+            type="text"
+            placeholder="Ingrédients séparés par des virgules..."
+        >
+
+        <div style="height:10px"></div>
+
+        <button
+            class="ajouter"
+            onclick="ajouterRepasBibliotheque()">
+            + Ajouter le repas
+        </button>
+
+    </div>
+
+    <div id="bibliothequeRepas"></div>
+
+</section>
+<div id="fenetreRepas" class="modal-overlay">
+
+    <div class="modal">
+
+        <div class="modal-entete">
+            <h2>Choisir un repas</h2>
+
+            <button
+                class="fermer-modal"
+                onclick="fermerFenetreRepas()">
+                ✕
+            </button>
+        </div>
+
+        <div id="listeChoixRepas"></div>
+
+        <button
+            class="bouton-autre"
+            onclick="choisirAutreRepas()">
+            ✏️ Autre repas
+        </button>
+
+        <button
+            class="bouton-supprimer-repas"
+            onclick="supprimerRepasPlanning()">
+            🗑️ Supprimer le repas
+        </button>
+
+    </div>
+
+</div>
+</main>
+
+
+<nav>
+
+    <div class="nav-item actif"
+         onclick="ouvrirEcran('courses', this)">
+        <div class="icon">🛒</div>
+        Courses
+    </div>
+
+    <div class="nav-item"
+         onclick="ouvrirEcran('semaine', this)">
+        <div class="icon">📅</div>
+        Semaine
+    </div>
+
+    <div class="nav-item"
+         onclick="ouvrirEcran('repas', this)">
+        <div class="icon">🍽️</div>
+        Repas
+    </div>
+
+</nav>
+
+
+<script>
+
+/* --------------------
+   NAVIGATION
+-------------------- */
+
+function ouvrirEcran(nom, element) {
+
+    document.querySelectorAll(".ecran")
+        .forEach(ecran => ecran.classList.remove("actif"));
+
+    document.getElementById(nom)
+        .classList.add("actif");
+
+    document.querySelectorAll(".nav-item")
+        .forEach(item => item.classList.remove("actif"));
+
+    element.classList.add("actif");
+
+    const titres = {
+        courses: "Liste de courses",
+        semaine: "Planning des repas",
+        repas: "Mes repas"
+    };
+
+    if (nom === "semaine") {
+
+    document.getElementById("titrePage").textContent =
+        titrePeriodeSemaine();
+
+} else {
+
+    document.getElementById("titrePage").textContent =
+        titres[nom];
+}
+}
+
+
+/* --------------------
+   COURSES
+-------------------- */
+
+let courses =
+    JSON.parse(localStorage.getItem("courses")) || [];
+
+function sauvegarderCourses() {
+    localStorage.setItem(
+        "courses",
+        JSON.stringify(courses)
+    );
+}
+
+function afficherCourses() {
+
+    const liste =
+        document.getElementById("listeCourses");
+
+    liste.innerHTML = "";
+
+    courses.forEach((course, index) => {
+
+        const ligne = document.createElement("li");
+
+        if (course.achete) {
+            ligne.classList.add("achete");
+        }
+
+        ligne.innerHTML = `
+            <input type="checkbox"
+                ${course.achete ? "checked" : ""}
+                onchange="cocherProduit(${index})">
+
+            <span>${course.nom}</span>
+
+            <button class="supprimer"
+                onclick="supprimerProduit(${index})">
+                🗑️
+            </button>
+        `;
+
+        liste.appendChild(ligne);
+    });
+}
+
+function ajouterProduit() {
+
+    const champ =
+        document.getElementById("nouveauProduit");
+
+    const nom = champ.value.trim();
+
+    if (nom === "") return;
+
+    courses.push({
+        nom: nom,
+        achete: false
+    });
+
+    champ.value = "";
+
+    sauvegarderCourses();
+    afficherCourses();
+}
+
+function cocherProduit(index) {
+
+    courses[index].achete =
+        !courses[index].achete;
+
+    sauvegarderCourses();
+    afficherCourses();
+}
+
+function supprimerProduit(index) {
+
+    courses.splice(index, 1);
+
+    sauvegarderCourses();
+    afficherCourses();
+}
+
+document
+    .getElementById("nouveauProduit")
+    .addEventListener("keypress", function(event) {
+
+        if (event.key === "Enter") {
+            ajouterProduit();
+        }
+    });
+
+
+/* --------------------
+   CALENDRIER
+-------------------- */
+
+let decalageSemaine = 0;
+
+let planning =
+    JSON.parse(localStorage.getItem("planning")) || {};
+
+function obtenirLundi() {
+
+    const date = new Date();
+
+    date.setDate(
+        date.getDate() + decalageSemaine * 7
+    );
+
+    const jour = date.getDay();
+
+    const difference =
+        date.getDate() - jour + (jour === 0 ? -6 : 1);
+
+    return new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        difference
+    );
+}
+
+function cleDate(date) {
+
+    const annee = date.getFullYear();
+    const mois =
+        String(date.getMonth() + 1).padStart(2, "0");
+    const jour =
+        String(date.getDate()).padStart(2, "0");
+
+    return `${annee}-${mois}-${jour}`;
+}
+function titrePeriodeSemaine() {
+
+    const lundi = obtenirLundi();
+    const dimanche = new Date(lundi);
+
+    dimanche.setDate(lundi.getDate() + 6);
+
+    const options = {
+        day: "numeric",
+        month: "long"
+    };
+
+    const debut = lundi.toLocaleDateString(
+        "fr-FR",
+        options
+    );
+
+    const fin = dimanche.toLocaleDateString(
+        "fr-FR",
+        options
+    );
+
+    return `${debut} – ${fin}`;
+}
+function afficherCalendrier() {
+
+   
+
+    const calendrier =
+        document.getElementById("calendrier");
+
+    calendrier.innerHTML = "";
+
+    const lundi = obtenirLundi();
+
+    const nomsJours = [
+        "Lundi",
+        "Mardi",
+        "Mercredi",
+        "Jeudi",
+        "Vendredi",
+        "Samedi",
+        "Dimanche"
+    ];
+
+    const aujourdHui = cleDate(new Date());
+
+    for (let i = 0; i < 7; i++) {
+
+        const date = new Date(lundi);
+
+        date.setDate(lundi.getDate() + i);
+
+        const cle = cleDate(date);
+
+        const repas = planning[cle] || "";
+
+        const bloc =
+            document.createElement("div");
+
+        bloc.className = "jour";
+
+        if (cle === aujourdHui) {
+            bloc.classList.add("jour-aujourdhui");
+        }
+
+        const dateTexte =
+            date.toLocaleDateString("fr-FR", {
+                day: "numeric",
+                month: "long"
+            });
+
+        bloc.innerHTML = `
+
+            <div class="nom-jour">
+                ${nomsJours[i]}
+                ${cle === aujourdHui
+                    ? '<span class="aujourdhui-label"> • AUJOURD’HUI</span>'
+                    : ''}
+            </div>
+
+            <div class="date-jour">
+                ${dateTexte}
+            </div>
+
+          ${repas ? `
+
+    <div style="
+        margin-top:14px;
+        padding:14px;
+        background:#f5f5f7;
+        border-radius:14px;
+    ">
+
+        <div style="
+            font-size:17px;
+            font-weight:600;
+        ">
+            🍽️ ${repas}
+        </div>
+
+        <div style="
+            display:flex;
+            gap:8px;
+            margin-top:12px;
+        ">
+
+            <button
+                onclick="afficherChoixRepas('${cle}')"
+                style="flex:1;">
+                ✏️ Modifier
+            </button>
+
+            ${repasBibliotheque.some(r =>
+                r.nom === repas &&
+                r.ingredients.length > 0
+            ) ? `
+
+                <button
+                    class="ajouter"
+                    onclick="ajouterRepasDuPlanningAuxCourses('${cle}')"
+                    style="flex:1;">
+                    🛒 Courses
+                </button>
+
+            ` : ""}
+
+        </div>
+
+    </div>
+
+` : `
+
+    <div style="margin-top:14px;">
+
+        <select
+            onchange="choisirRepas('${cle}', this.value)"
+            style="
+                width:100%;
+                padding:14px;
+                border:1px solid #ddd;
+                border-radius:12px;
+                font-size:16px;
+                background:white;
+            ">
+
+            <option value="">
+                ＋ Choisir un repas
+            </option>
+
+            ${repasBibliotheque.map(r => `
+                <option value="${r.nom}">
+                    ${r.nom}
+                </option>
+            `).join("")}
+
+            <option value="__autre__">
+                ✏️ Autre repas...
+            </option>
+
+        </select>
+
+    </div>
+
+`}
+
+    
+
+</div>
+
+${repas &&
+  !repasBibliotheque.some(r => r.nom === repas)
+  ? `<div style="margin-top:10px">
+        <input
+            type="text"
+            value="${repas}"
+            onchange="enregistrerRepas('${cle}', this.value)"
+            placeholder="Nom du repas..."
+        >
+     </div>`
+  : ""}
+       `;
+
+        calendrier.appendChild(bloc);
+    }
+}
+function ajouterRepasDuPlanningAuxCourses(date) {
+
+    const nomRepas = planning[date];
+
+    const repas = repasBibliotheque.find(
+        r => r.nom === nomRepas
+    );
+
+    if (!repas) return;
+
+    let nombreAjoute = 0;
+
+    repas.ingredients.forEach(ingredient => {
+
+        const existeDeja = courses.some(
+            course =>
+                course.nom.toLowerCase() ===
+                ingredient.toLowerCase()
+        );
+
+        if (!existeDeja) {
+
+            courses.push({
+                nom: ingredient,
+                achete: false
+            });
+
+            nombreAjoute++;
+        }
+    });
+
+    sauvegarderCourses();
+    afficherCourses();
+
+    if (nombreAjoute === 0) {
+
+        alert(
+            "Tous les ingrédients sont déjà dans ta liste de courses 👍"
+        );
+
+    } else {
+
+        alert(
+            nombreAjoute +
+            " ingrédient(s) ajouté(s) aux courses 🛒"
+        );
+    }
+}
+let dateRepasEnModification = null;
+
+function afficherChoixRepas(date) {
+
+    dateRepasEnModification = date;
+
+    const zone =
+        document.getElementById("listeChoixRepas");
+
+    zone.innerHTML = "";
+
+    const repasActuel = planning[date];
+
+    repasBibliotheque.forEach(repas => {
+
+        const bouton =
+            document.createElement("button");
+
+        bouton.className = "choix-repas";
+
+        if (repas.nom === repasActuel) {
+            bouton.classList.add(
+                "choix-repas-selectionne"
+            );
+        }
+
+        bouton.innerHTML =
+            "🍽️ " + repas.nom;
+
+        bouton.onclick = function() {
+
+            planning[date] = repas.nom;
+
+            sauvegarderPlanning();
+
+            fermerFenetreRepas();
+
+            afficherCalendrier();
+        };
+
+        zone.appendChild(bouton);
+    });
+
+    document
+        .getElementById("fenetreRepas")
+        .classList.add("visible");
+}
+function fermerFenetreRepas() {
+
+    document
+        .getElementById("fenetreRepas")
+        .classList.remove("visible");
+
+    dateRepasEnModification = null;
+}
+
+
+function sauvegarderPlanning() {
+
+    localStorage.setItem(
+        "planning",
+        JSON.stringify(planning)
+    );
+}
+
+
+function choisirAutreRepas() {
+
+    if (!dateRepasEnModification) return;
+
+    const repasActuel =
+        planning[dateRepasEnModification] || "";
+
+    const autre = prompt(
+        "Quel repas prévois-tu ?",
+        repasActuel
+    );
+
+    if (autre === null) return;
+
+    if (autre.trim() !== "") {
+
+        planning[dateRepasEnModification] =
+            autre.trim();
+
+        sauvegarderPlanning();
+
+        fermerFenetreRepas();
+
+        afficherCalendrier();
+    }
+}
+
+
+function supprimerRepasPlanning() {
+
+    if (!dateRepasEnModification) return;
+
+    delete planning[dateRepasEnModification];
+
+    sauvegarderPlanning();
+
+    fermerFenetreRepas();
+
+    afficherCalendrier();
+}
+function choisirRepas(date, valeur) {
+
+    if (valeur === "__autre__") {
+
+        const repasLibre =
+            prompt("Quel repas prévois-tu ?");
+
+        if (repasLibre && repasLibre.trim() !== "") {
+
+            enregistrerRepas(
+                date,
+                repasLibre.trim()
+            );
+
+        }
+
+        afficherCalendrier();
+        return;
+    }
+
+    enregistrerRepas(date, valeur);
+    afficherCalendrier();
+}
+function enregistrerRepas(date, repas) {
+
+    if (repas.trim() === "") {
+        delete planning[date];
+    } else {
+        planning[date] = repas.trim();
+    }
+
+    localStorage.setItem(
+        "planning",
+        JSON.stringify(planning)
+    );
+}
+
+function changerSemaine(nombre) {
+
+    decalageSemaine += nombre;
+
+    afficherCalendrier();
+
+        document.getElementById("titrePage").textContent =
+        titrePeriodeSemaine();
+}
+
+function semaineActuelle() {
+
+    decalageSemaine = 0;
+
+    afficherCalendrier();
+
+     document.getElementById("titrePage").textContent =
+        titrePeriodeSemaine();
+}
+/* --------------------
+   BIBLIOTHÈQUE REPAS
+-------------------- */
+
+let repasBibliotheque =
+    JSON.parse(localStorage.getItem("repasBibliotheque")) || [];
+
+function sauvegarderRepasBibliotheque() {
+
+    localStorage.setItem(
+        "repasBibliotheque",
+        JSON.stringify(repasBibliotheque)
+    );
+}
+
+function ajouterRepasBibliotheque() {
+
+    const champNom =
+        document.getElementById("nomRepas");
+
+    const champIngredients =
+        document.getElementById("ingredientsRepas");
+
+    const nom = champNom.value.trim();
+
+    const ingredients =
+        champIngredients.value
+            .split(",")
+            .map(ingredient => ingredient.trim())
+            .filter(ingredient => ingredient !== "");
+
+    if (nom === "") {
+        alert("Indique le nom du repas.");
+        return;
+    }
+
+    repasBibliotheque.push({
+        nom: nom,
+        ingredients: ingredients
+    });
+
+    champNom.value = "";
+    champIngredients.value = "";
+
+    sauvegarderRepasBibliotheque();
+    afficherBibliothequeRepas();
+}
+
+
+function afficherBibliothequeRepas() {
+
+    const zone =
+        document.getElementById("bibliothequeRepas");
+
+    zone.innerHTML = "";
+
+    if (repasBibliotheque.length === 0) {
+
+        zone.innerHTML = `
+            <div class="card">
+                <p class="message-vide">
+                    Aucun repas enregistré pour le moment.
+                </p>
+            </div>
+        `;
+
+        return;
+    }
+
+    repasBibliotheque.forEach((repas, index) => {
+
+        const carte =
+            document.createElement("div");
+
+        carte.className = "card";
+
+        const ingredientsHTML =
+            repas.ingredients.length > 0
+            ? repas.ingredients
+                .map(ingredient => `<li>• ${ingredient}</li>`)
+                .join("")
+            : "<li>Aucun ingrédient</li>";
+
+        carte.innerHTML = `
+
+            <h2>🍽️ ${repas.nom}</h2>
+
+            <strong>Ingrédients</strong>
+
+            <ul>
+                ${ingredientsHTML}
+            </ul>
+
+            <div style="
+                display:flex;
+                gap:8px;
+                margin-top:15px;
+            ">
+
+               <button
+    onclick="modifierRepasBibliotheque(${index})">
+    ✏️ Modifier
+</button> 
+
+                <button
+                    class="supprimer"
+                    onclick="supprimerRepasBibliotheque(${index})">
+                    🗑️
+                </button>
+
+            </div>
+        `;
+
+        zone.appendChild(carte);
+    });
+}
+function modifierRepasBibliotheque(index) {
+
+    const repas = repasBibliotheque[index];
+
+    const nouveauNom = prompt(
+        "Nom du repas :",
+        repas.nom
+    );
+
+    if (nouveauNom === null) return;
+
+    const nomNettoye = nouveauNom.trim();
+
+    if (nomNettoye === "") {
+        alert("Le nom du repas ne peut pas être vide.");
+        return;
+    }
+
+    const nouveauxIngredients = prompt(
+        "Ingrédients séparés par des virgules :",
+        repas.ingredients.join(", ")
+    );
+
+    if (nouveauxIngredients === null) return;
+
+    const ingredients = nouveauxIngredients
+        .split(",")
+        .map(ingredient => ingredient.trim())
+        .filter(ingredient => ingredient !== "");
+
+    const ancienNom = repas.nom;
+
+    repas.nom = nomNettoye;
+    repas.ingredients = ingredients;
+
+    /* Si le repas était déjà utilisé dans le planning,
+       on met également son nom à jour */
+
+    Object.keys(planning).forEach(date => {
+
+        if (planning[date] === ancienNom) {
+            planning[date] = nomNettoye;
+        }
+
+    });
+
+    localStorage.setItem(
+        "planning",
+        JSON.stringify(planning)
+    );
+
+    sauvegarderRepasBibliotheque();
+
+    afficherBibliothequeRepas();
+    afficherCalendrier();
+}
+
+function supprimerRepasBibliotheque(index) {
+
+    if (!confirm(
+        "Supprimer ce repas de ta bibliothèque ?"
+    )) {
+        return;
+    }
+
+    repasBibliotheque.splice(index, 1);
+
+    sauvegarderRepasBibliotheque();
+    afficherBibliothequeRepas();
+}
+
+
+function ajouterIngredientsCourses(index) {
+
+    const repas =
+        repasBibliotheque[index];
+
+    repas.ingredients.forEach(ingredient => {
+
+        const existeDeja =
+            courses.some(course =>
+                course.nom.toLowerCase() ===
+                ingredient.toLowerCase()
+            );
+
+        if (!existeDeja) {
+
+            courses.push({
+                nom: ingredient,
+                achete: false
+            });
+        }
+    });
+
+    sauvegarderCourses();
+    afficherCourses();
+
+    alert(
+        "Les ingrédients de \"" +
+        repas.nom +
+        "\" ont été ajoutés aux courses 🛒"
+    );
+}
+
+/* --------------------
+   DÉMARRAGE
+-------------------- */
+
+afficherCourses();
+afficherCalendrier();
+afficherBibliothequeRepas();
+</script>
+
+</body>
+</html>
