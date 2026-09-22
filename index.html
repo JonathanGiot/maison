@@ -5,11 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maison</title>
 
-      <link rel="apple-touch-icon" href="icon-maison.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Maison">
-    <meta name="theme-color" content="#007aff">
-    
 <style>
 * {
     box-sizing: border-box;
@@ -380,10 +375,97 @@ nav {
     background: white;
     color: #ff3b30;
 }
+
+/* CONNEXION MAISON */
+
+.connexion-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: #f2f2f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.connexion-card {
+    width: 100%;
+    max-width: 400px;
+    background: white;
+    border-radius: 24px;
+    padding: 30px 22px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+}
+
+.connexion-icone {
+    font-size: 52px;
+    margin-bottom: 8px;
+}
+
+.connexion-card h1 {
+    margin: 0;
+    font-size: 30px;
+}
+
+.connexion-card p {
+    color: #8e8e93;
+    margin: 8px 0 24px;
+}
+
+.connexion-card input {
+    margin-bottom: 12px;
+}
+
+.bouton-connexion {
+    width: 100%;
+    margin-top: 5px;
+    padding: 14px;
+    font-size: 17px;
+}
+
+.erreur-connexion {
+    color: #ff3b30;
+    font-size: 14px;
+    margin-top: 14px;
+    min-height: 18px;
+}
+
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
+
+   <!-- CONNEXION MAISON -->
+<div id="ecranConnexion" class="connexion-overlay">
+    <div class="connexion-card">
+        <div class="connexion-icone">🏠</div>
+        <h1>Maison</h1>
+        <p>Connectez-vous pour accéder à votre espace familial.</p>
+
+        <input
+            type="email"
+            id="emailConnexion"
+            placeholder="Adresse e-mail"
+            autocomplete="email"
+        >
+
+        <input
+            type="password"
+            id="motDePasseConnexion"
+            placeholder="Mot de passe"
+            autocomplete="current-password"
+        >
+
+        <button class="ajouter bouton-connexion" onclick="seConnecter()">
+            Se connecter
+        </button>
+
+        <div id="erreurConnexion" class="erreur-connexion"></div>
+    </div>
+</div> 
 
 <header>
     <h1>🏠 Maison</h1>
@@ -530,6 +612,60 @@ nav {
 
 <script>
 
+const SUPABASE_URL = "https://qawcvtyxfvqckmyxpagj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_UmCIuiLXioDCnNl-xMqrVA_uCqvyh3g";
+
+const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+/* --------------------
+   CONNEXION
+-------------------- */
+
+async function seConnecter() {
+    const email = document.getElementById("emailConnexion").value.trim();
+    const motDePasse = document.getElementById("motDePasseConnexion").value;
+    const erreur = document.getElementById("erreurConnexion");
+
+    erreur.textContent = "";
+
+    if (!email || !motDePasse) {
+        erreur.textContent = "Merci de renseigner votre e-mail et votre mot de passe.";
+        return;
+    }
+
+    const { error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: motDePasse
+    });
+
+    if (error) {
+        erreur.textContent = "E-mail ou mot de passe incorrect.";
+        return;
+    }
+
+    document.getElementById("ecranConnexion").style.display = "none";
+    await chargerCourses();
+}
+
+
+/* Vérifie si l'utilisateur est déjà connecté */
+
+async function verifierConnexion() {
+    const { data } = await supabaseClient.auth.getSession();
+
+    if (data.session) {
+        document.getElementById("ecranConnexion").style.display = "none";
+        await chargerCourses();
+    } else {
+        document.getElementById("ecranConnexion").style.display = "flex";
+    }
+}
+
+window.addEventListener("DOMContentLoaded", verifierConnexion);
+
 /* --------------------
    NAVIGATION
 -------------------- */
@@ -570,14 +706,21 @@ function ouvrirEcran(nom, element) {
    COURSES
 -------------------- */
 
-let courses =
-    JSON.parse(localStorage.getItem("courses")) || [];
+let courses = [];
 
-function sauvegarderCourses() {
-    localStorage.setItem(
-        "courses",
-        JSON.stringify(courses)
-    );
+async function chargerCourses() {
+    const { data, error } = await supabaseClient
+        .from("courses")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+    if (error) {
+        console.error("Erreur chargement courses :", error);
+        return;
+    }
+
+    courses = data || [];
+    afficherCourses();
 }
 
 function afficherCourses() {
@@ -600,7 +743,7 @@ function afficherCourses() {
                 ${course.achete ? "checked" : ""}
                 onchange="cocherProduit(${index})">
 
-            <span>${course.nom}</span>
+            <span>${course.produit}</span>
 
             <button class="supprimer"
                 onclick="supprimerProduit(${index})">
@@ -612,7 +755,7 @@ function afficherCourses() {
     });
 }
 
-function ajouterProduit() {
+async function ajouterProduit() {
 
     const champ =
         document.getElementById("nouveauProduit");
@@ -621,42 +764,61 @@ function ajouterProduit() {
 
     if (nom === "") return;
 
-    courses.push({
-        nom: nom,
-        achete: false
-    });
+    const { error } = await supabaseClient
+        .from("courses")
+        .insert({
+            produit: nom,
+            achete: false
+        });
+
+    if (error) {
+        console.error("Erreur ajout produit :", error);
+        return;
+    }
 
     champ.value = "";
 
-    sauvegarderCourses();
-    afficherCourses();
+    await chargerCourses();
 }
 
-function cocherProduit(index) {
 
-    courses[index].achete =
-        !courses[index].achete;
+async function cocherProduit(index) {
 
-    sauvegarderCourses();
-    afficherCourses();
+    const course = courses[index];
+    const nouvelEtat = !course.achete;
+
+    const { error } = await supabaseClient
+        .from("courses")
+        .update({
+            achete: nouvelEtat
+        })
+        .eq("id", course.id);
+
+    if (error) {
+        console.error("Erreur modification produit :", error);
+        return;
+    }
+
+    await chargerCourses();
 }
 
-function supprimerProduit(index) {
 
-    courses.splice(index, 1);
+async function supprimerProduit(index) {
 
-    sauvegarderCourses();
-    afficherCourses();
+    const course = courses[index];
+
+    const { error } = await supabaseClient
+        .from("courses")
+        .delete()
+        .eq("id", course.id);
+
+    if (error) {
+        console.error("Erreur suppression produit :", error);
+        return;
+    }
+
+    await chargerCourses();
 }
-
-document
-    .getElementById("nouveauProduit")
-    .addEventListener("keypress", function(event) {
-
-        if (event.key === "Enter") {
-            ajouterProduit();
-        }
-    });
 
 
 /* --------------------
@@ -884,7 +1046,7 @@ ${repas &&
         calendrier.appendChild(bloc);
     }
 }
-function ajouterRepasDuPlanningAuxCourses(date) {
+async function ajouterRepasDuPlanningAuxCourses(date) {
 
     const nomRepas = planning[date];
 
@@ -896,39 +1058,45 @@ function ajouterRepasDuPlanningAuxCourses(date) {
 
     let nombreAjoute = 0;
 
-    repas.ingredients.forEach(ingredient => {
+    for (const ingredient of repas.ingredients) {
 
         const existeDeja = courses.some(
             course =>
-                course.nom.toLowerCase() ===
+                course.produit.toLowerCase() ===
                 ingredient.toLowerCase()
         );
 
         if (!existeDeja) {
 
-            courses.push({
-                nom: ingredient,
-                achete: false
-            });
+            const { error } = await supabaseClient
+                .from("courses")
+                .insert({
+                    produit: ingredient,
+                    achete: false
+                });
 
-            nombreAjoute++;
+            if (!error) {
+                nombreAjoute++;
+            } else {
+                console.error(
+                    "Erreur ajout ingrédient :",
+                    ingredient,
+                    error
+                );
+            }
         }
-    });
+    }
 
-    sauvegarderCourses();
-    afficherCourses();
+    await chargerCourses();
 
-    if (nombreAjoute === 0) {
-
-        alert(
-            "Tous les ingrédients sont déjà dans ta liste de courses 👍"
-        );
-
-    } else {
-
+    if (nombreAjoute > 0) {
         alert(
             nombreAjoute +
-            " ingrédient(s) ajouté(s) aux courses 🛒"
+            " ingrédient(s) ajouté(s) à la liste de courses."
+        );
+    } else {
+        alert(
+            "Tous les ingrédients sont déjà dans la liste de courses."
         );
     }
 }
@@ -1282,36 +1450,54 @@ function supprimerRepasBibliotheque(index) {
 }
 
 
-function ajouterIngredientsCourses(index) {
+async function ajouterIngredientsCourses(index) {
 
-    const repas =
-        repasBibliotheque[index];
+    const repas = repasBibliotheque[index];
 
-    repas.ingredients.forEach(ingredient => {
+    let nombreAjoute = 0;
 
-        const existeDeja =
-            courses.some(course =>
-                course.nom.toLowerCase() ===
+    for (const ingredient of repas.ingredients) {
+
+        const existeDeja = courses.some(
+            course =>
+                course.produit.toLowerCase() ===
                 ingredient.toLowerCase()
-            );
+        );
 
         if (!existeDeja) {
 
-            courses.push({
-                nom: ingredient,
-                achete: false
-            });
+            const { error } = await supabaseClient
+                .from("courses")
+                .insert({
+                    produit: ingredient,
+                    achete: false
+                });
+
+            if (!error) {
+                nombreAjoute++;
+            } else {
+                console.error(
+                    "Erreur ajout ingrédient :",
+                    ingredient,
+                    error
+                );
+            }
         }
-    });
+    }
 
-    sauvegarderCourses();
-    afficherCourses();
+    await chargerCourses();
 
-    alert(
-        "Les ingrédients de \"" +
-        repas.nom +
-        "\" ont été ajoutés aux courses 🛒"
-    );
+    if (nombreAjoute > 0) {
+        alert(
+            "Les ingrédients de \"" +
+            repas.nom +
+            "\" ont été ajoutés aux courses 🛒"
+        );
+    } else {
+        alert(
+            "Tous les ingrédients sont déjà dans la liste de courses."
+        );
+    }
 }
 
 /* --------------------
