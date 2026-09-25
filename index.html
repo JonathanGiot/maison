@@ -743,12 +743,15 @@ supabaseClient
             schema: "public",
             table: "courses"
         },
-        async () => {
-            await chargerCourses();
-        }
+        async (payload) => {
+    console.log("CHANGEMENT REALTIME REÇU :", payload);
+    await chargerCourses();
+}
     )
-    .subscribe();
-    
+    .subscribe((status) => {
+    console.log("Realtime Courses :", status);
+});
+
 function afficherCourses() {
 
     const liste =
