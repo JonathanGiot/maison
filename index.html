@@ -733,7 +733,22 @@ async function chargerCourses() {
     courses = data || [];
     afficherCourses();
 }
-
+// Synchronisation des courses en temps réel
+supabaseClient
+    .channel("courses-realtime")
+    .on(
+        "postgres_changes",
+        {
+            event: "*",
+            schema: "public",
+            table: "courses"
+        },
+        async () => {
+            await chargerCourses();
+        }
+    )
+    .subscribe();
+    
 function afficherCourses() {
 
     const liste =
