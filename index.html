@@ -779,7 +779,7 @@ let canalRepas = null;
 function activerTempsReelRepas() {
 
     console.log(">>> REALTIME REPAS DEMARRE <<<");
-    
+
     if (canalRepas) return;
 
     canalRepas = supabaseClient
@@ -796,6 +796,8 @@ function activerTempsReelRepas() {
             }
         )
         .subscribe((status) => {
+            console.log("STATUT REALTIME REPAS :", status);
+            
             if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
                 console.error("Erreur Realtime Repas :", status);
             }
