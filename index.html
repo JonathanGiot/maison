@@ -657,6 +657,7 @@ async function seConnecter() {
     await chargerCourses();
     await chargerRepasBibliotheque();
     await chargerPlanning();
+    activerTempsReelCourses();
 }
 
 
@@ -670,6 +671,7 @@ async function verifierConnexion() {
         await chargerCourses();
         await chargerRepasBibliotheque();
         await chargerPlanning();
+        activerTempsReelCourses();
     } else {
         document.getElementById("ecranConnexion").style.display = "flex";
     }
@@ -734,23 +736,37 @@ async function chargerCourses() {
     afficherCourses();
 }
 // Synchronisation des courses en temps réel
-supabaseClient
-    .channel("courses-realtime")
-    .on(
-        "postgres_changes",
-        {
-            event: "*",
-            schema: "public",
-            table: "courses"
-        },
-        async (payload) => {
-    console.log("CHANGEMENT REALTIME REÇU :", payload);
-    await chargerCourses();
+let canalCourses = null;
+
+function activerTempsReelCourses() {
+
+    if (canalCourses) return;
+
+    canalCourses = supabaseClient
+        .channel("courses-realtime")
+        .on(
+            "postgres_changes",
+            {
+                event: "*",
+                schema: "public",
+                table: "courses"
+            },
+            async (payload) => {
+                console.log(
+                    "CHANGEMENT REALTIME REÇU :",
+                    payload
+                );
+
+                await chargerCourses();
+            }
+        )
+        .subscribe((status) => {
+            console.log(
+                "Realtime Courses :",
+                status
+            );
+        });
 }
-    )
-    .subscribe((status) => {
-    console.log("Realtime Courses :", status);
-});
 
 function afficherCourses() {
 
