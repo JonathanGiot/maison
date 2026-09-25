@@ -631,6 +631,19 @@ const supabaseClient = supabase.createClient(
    CONNEXION
 -------------------- */
 
+async function initialiserMaison(session) {
+    document.getElementById("ecranConnexion").style.display = "none";
+
+    // Authentifie explicitement la connexion Realtime avec la session courante.
+    await supabaseClient.realtime.setAuth(session.access_token);
+
+    await chargerCourses();
+    await chargerRepasBibliotheque();
+    await chargerPlanning();
+
+    activerTempsReelCourses();
+}
+
 async function seConnecter() {
     const email = document.getElementById("emailConnexion").value.trim();
     const motDePasse = document.getElementById("motDePasseConnexion").value;
@@ -643,44 +656,37 @@ async function seConnecter() {
         return;
     }
 
-    const { error } = await supabaseClient.auth.signInWithPassword({
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
         email: email,
         password: motDePasse
     });
 
-    if (error) {
+    if (error || !data.session) {
         erreur.textContent = "E-mail ou mot de passe incorrect.";
         return;
     }
 
-    document.getElementById("ecranConnexion").style.display = "none";
-    await chargerCourses();
-    await chargerRepasBibliotheque();
-    await chargerPlanning();
-    console.log("SESSION TROUVÉE - démarrage Realtime");
-    activerTempsReelCourses();
+    await initialiserMaison(data.session);
 }
 
 
 /* Vérifie si l'utilisateur est déjà connecté */
 
 async function verifierConnexion() {
-    const { data } = await supabaseClient.auth.getSession();
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if (error) {
+        console.error("Erreur de session :", error);
+        document.getElementById("ecranConnexion").style.display = "flex";
+        return;
+    }
 
     if (data.session) {
-        document.getElementById("ecranConnexion").style.display = "none";
-        await chargerCourses();
-        await chargerRepasBibliotheque();
-        await chargerPlanning();
-
-        console.log("SESSION OK - lancement Realtime");
-
-        activerTempsReelCourses();
+        await initialiserMaison(data.session);
     } else {
         document.getElementById("ecranConnexion").style.display = "flex";
     }
 }
-
 
 
 /* --------------------
@@ -743,9 +749,6 @@ async function chargerCourses() {
 let canalCourses = null;
 
 function activerTempsReelCourses() {
-
-    console.log(">>> FONCTION REALTIME APPELEE <<<");
-
     if (canalCourses) return;
 
     canalCourses = supabaseClient
@@ -757,20 +760,14 @@ function activerTempsReelCourses() {
                 schema: "public",
                 table: "courses"
             },
-            async (payload) => {
-                console.log(
-                    "CHANGEMENT REALTIME REÇU :",
-                    payload
-                );
-
+            async () => {
                 await chargerCourses();
             }
         )
         .subscribe((status) => {
-            console.log(
-                "Realtime Courses :",
-                status
-            );
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+                console.error("Erreur Realtime Courses :", status);
+            }
         });
 }
 
@@ -1758,8 +1755,6 @@ async function ajouterIngredientsCourses(index) {
 afficherCourses();
 afficherCalendrier();
 afficherBibliothequeRepas();
-
-console.log(">>> BAS DU SCRIPT ATTEINT <<<");
 verifierConnexion();
 </script>
 
