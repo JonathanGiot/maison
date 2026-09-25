@@ -1753,7 +1753,9 @@ async function ajouterIngredientsCourses(index) {
 afficherCourses();
 afficherCalendrier();
 afficherBibliothequeRepas();
-verifierConnexion();
+window.addEventListener("load", () => {
+    verifierConnexion();
+});
 </script>
 
 </body>
