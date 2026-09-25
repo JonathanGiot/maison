@@ -792,12 +792,13 @@ function activerTempsReelRepas() {
                 table: "repas"
             },
             async () => {
+                console.log(">>> CHANGEMENT REPAS REÇU <<<");
                 await chargerRepasBibliotheque();
             }
         )
         .subscribe((status) => {
             console.log("STATUT REALTIME REPAS :", status);
-            
+
             if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
                 console.error("Erreur Realtime Repas :", status);
             }
