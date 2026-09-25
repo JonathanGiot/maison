@@ -792,9 +792,15 @@ function activerTempsReelRepas() {
                 table: "repas"
             },
             async () => {
-                console.log(">>> CHANGEMENT REPAS REÇU <<<");
-                await chargerRepasBibliotheque();
-            }
+    console.log(">>> CHANGEMENT REPAS REÇU <<<");
+
+    await chargerRepasBibliotheque();
+
+    console.log(
+        "REPAS APRES RECHARGEMENT :",
+        repasBibliotheque
+    );
+}
         )
         .subscribe((status) => {
             console.log("STATUT REALTIME REPAS :", status);
