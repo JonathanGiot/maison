@@ -674,7 +674,7 @@ async function verifierConnexion() {
         await chargerPlanning();
 
         console.log("SESSION OK - lancement Realtime");
-        
+
         activerTempsReelCourses();
     } else {
         document.getElementById("ecranConnexion").style.display = "flex";
@@ -743,6 +743,8 @@ async function chargerCourses() {
 let canalCourses = null;
 
 function activerTempsReelCourses() {
+
+    console.log(">>> FONCTION REALTIME APPELEE <<<");
 
     if (canalCourses) return;
 
