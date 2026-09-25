@@ -643,6 +643,7 @@ async function initialiserMaison(session) {
 
     activerTempsReelCourses();
     activerTempsReelRepas();
+    activerTempsReelPlanning();
 }
 
 async function seConnecter() {
@@ -807,6 +808,32 @@ function activerTempsReelRepas() {
 
             if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
                 console.error("Erreur Realtime Repas :", status);
+            }
+        });
+}
+
+// Synchronisation du planning en temps réel
+let canalPlanning = null;
+
+function activerTempsReelPlanning() {
+    if (canalPlanning) return;
+
+    canalPlanning = supabaseClient
+        .channel("planning-realtime")
+        .on(
+            "postgres_changes",
+            {
+                event: "*",
+                schema: "public",
+                table: "planning"
+            },
+            async () => {
+                await chargerPlanning();
+            }
+        )
+        .subscribe((status) => {
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+                console.error("Erreur Realtime Planning :", status);
             }
         });
 }
