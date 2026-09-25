@@ -533,7 +533,14 @@ nav {
         >
 
         <div style="height:10px"></div>
+<select id="categorieRepas">
+    <option value="">Choisir une catégorie...</option>
+    <option value="Pâtes">🍝 Pâtes</option>
+    <option value="Plats traditionnels">🍲 Plats traditionnels</option>
+    <option value="Plats à emporter">🥡 Plats à emporter</option>
+</select>
 
+<div style="height:10px"></div>
         <input
             id="ingredientsRepas"
             type="text"
@@ -648,6 +655,8 @@ async function seConnecter() {
 
     document.getElementById("ecranConnexion").style.display = "none";
     await chargerCourses();
+    await chargerRepasBibliotheque();
+    await chargerPlanning();
 }
 
 
@@ -659,6 +668,8 @@ async function verifierConnexion() {
     if (data.session) {
         document.getElementById("ecranConnexion").style.display = "none";
         await chargerCourses();
+        await chargerRepasBibliotheque();
+        await chargerPlanning();
     } else {
         document.getElementById("ecranConnexion").style.display = "flex";
     }
@@ -827,8 +838,28 @@ async function supprimerProduit(index) {
 
 let decalageSemaine = 0;
 
-let planning =
-    JSON.parse(localStorage.getItem("planning")) || {};
+let planning = {};
+
+async function chargerPlanning() {
+
+    const { data, error } = await supabaseClient
+        .from("planning")
+        .select("*")
+        .order("date", { ascending: true });
+
+    if (error) {
+        console.error("Erreur chargement planning :", error);
+        return;
+    }
+
+    planning = {};
+
+    (data || []).forEach(ligne => {
+        planning[ligne.date] = ligne.repas;
+    });
+
+    afficherCalendrier();
+}
 
 function obtenirLundi() {
 
@@ -981,7 +1012,7 @@ function afficherCalendrier() {
                 <button
                     class="ajouter"
                     onclick="ajouterRepasDuPlanningAuxCourses('${cle}')"
-                    style="flex:1;">
+                    style="flex:1; background:#E8F0FE; color:#3F7DE8;">
                     🛒 Courses
                 </button>
 
@@ -1010,11 +1041,32 @@ function afficherCalendrier() {
                 ＋ Choisir un repas
             </option>
 
-            ${repasBibliotheque.map(r => `
+            ${[
+    { nom: "Pâtes", titre: "🍝 Pâtes" },
+    { nom: "Plats traditionnels", titre: "🍲 Plats traditionnels" },
+    { nom: "Plats à emporter", titre: "🥡 Plats à emporter" }
+].map(categorie => {
+
+    const repasDeLaCategorie =
+        repasBibliotheque.filter(
+            r => r.categorie === categorie.nom
+        );
+
+    if (repasDeLaCategorie.length === 0) {
+        return "";
+    }
+
+    return `
+        <optgroup label="${categorie.titre}">
+            ${repasDeLaCategorie.map(r => `
                 <option value="${r.nom}">
                     ${r.nom}
                 </option>
             `).join("")}
+        </optgroup>
+    `;
+
+}).join("")}
 
             <option value="__autre__">
                 ✏️ Autre repas...
@@ -1129,16 +1181,12 @@ function afficherChoixRepas(date) {
         bouton.innerHTML =
             "🍽️ " + repas.nom;
 
-        bouton.onclick = function() {
+        bouton.onclick = async function() {
 
-            planning[date] = repas.nom;
+    await enregistrerRepas(date, repas.nom);
 
-            sauvegarderPlanning();
-
-            fermerFenetreRepas();
-
-            afficherCalendrier();
-        };
+    fermerFenetreRepas();
+};
 
         zone.appendChild(bouton);
     });
@@ -1157,16 +1205,10 @@ function fermerFenetreRepas() {
 }
 
 
-function sauvegarderPlanning() {
-
-    localStorage.setItem(
-        "planning",
-        JSON.stringify(planning)
-    );
-}
 
 
-function choisirAutreRepas() {
+
+async function choisirAutreRepas() {
 
     if (!dateRepasEnModification) return;
 
@@ -1182,30 +1224,28 @@ function choisirAutreRepas() {
 
     if (autre.trim() !== "") {
 
-        planning[dateRepasEnModification] =
-            autre.trim();
+       await enregistrerRepas(
+    dateRepasEnModification,
+    autre.trim()
+);
 
-        sauvegarderPlanning();
-
-        fermerFenetreRepas();
-
-        afficherCalendrier();
+fermerFenetreRepas();
     }
 }
 
 
-function supprimerRepasPlanning() {
+async function supprimerRepasPlanning() {
 
     if (!dateRepasEnModification) return;
 
-    delete planning[dateRepasEnModification];
-
-    sauvegarderPlanning();
+    await enregistrerRepas(
+        dateRepasEnModification,
+        ""
+    );
 
     fermerFenetreRepas();
-
-    afficherCalendrier();
 }
+
 function choisirRepas(date, valeur) {
 
     if (valeur === "__autre__") {
@@ -1229,18 +1269,50 @@ function choisirRepas(date, valeur) {
     enregistrerRepas(date, valeur);
     afficherCalendrier();
 }
-function enregistrerRepas(date, repas) {
+async function enregistrerRepas(date, repas) {
 
-    if (repas.trim() === "") {
-        delete planning[date];
+    const repasNettoye = repas.trim();
+
+    if (repasNettoye === "") {
+
+        const { error } = await supabaseClient
+            .from("planning")
+            .delete()
+            .eq("date", date);
+
+        if (error) {
+            console.error("Erreur suppression planning :", error);
+            return;
+        }
+
     } else {
-        planning[date] = repas.trim();
+
+        /* On supprime d'abord l'ancien repas éventuel pour cette date */
+        const { error: erreurSuppression } = await supabaseClient
+            .from("planning")
+            .delete()
+            .eq("date", date);
+
+        if (erreurSuppression) {
+            console.error("Erreur planning :", erreurSuppression);
+            return;
+        }
+
+        /* Puis on enregistre le nouveau */
+        const { error: erreurAjout } = await supabaseClient
+            .from("planning")
+            .insert({
+                date: date,
+                repas: repasNettoye
+            });
+
+        if (erreurAjout) {
+            console.error("Erreur ajout planning :", erreurAjout);
+            return;
+        }
     }
 
-    localStorage.setItem(
-        "planning",
-        JSON.stringify(planning)
-    );
+    await chargerPlanning();
 }
 
 function changerSemaine(nombre) {
@@ -1266,24 +1338,38 @@ function semaineActuelle() {
    BIBLIOTHÈQUE REPAS
 -------------------- */
 
-let repasBibliotheque =
-    JSON.parse(localStorage.getItem("repasBibliotheque")) || [];
+let repasBibliotheque = [];
 
-function sauvegarderRepasBibliotheque() {
+async function chargerRepasBibliotheque() {
 
-    localStorage.setItem(
-        "repasBibliotheque",
-        JSON.stringify(repasBibliotheque)
-    );
+    const { data, error } = await supabaseClient
+        .from("repas")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+    if (error) {
+        console.error("Erreur chargement repas :", error);
+        return;
+    }
+
+    repasBibliotheque = data || [];
+
+    afficherBibliothequeRepas();
+    afficherCalendrier();
 }
 
-function ajouterRepasBibliotheque() {
+async function ajouterRepasBibliotheque() {
 
     const champNom =
         document.getElementById("nomRepas");
 
     const champIngredients =
         document.getElementById("ingredientsRepas");
+
+        const champCategorie =
+    document.getElementById("categorieRepas");
+
+const categorie = champCategorie.value;
 
     const nom = champNom.value.trim();
 
@@ -1297,17 +1383,28 @@ function ajouterRepasBibliotheque() {
         alert("Indique le nom du repas.");
         return;
     }
+if (categorie === "") {
+    alert("Choisis une catégorie.");
+    return;
+}
+    const { error } = await supabaseClient
+    .from("repas")
+    .insert({
+    nom: nom,
+    ingredients: ingredients,
+    categorie: categorie
+});
 
-    repasBibliotheque.push({
-        nom: nom,
-        ingredients: ingredients
-    });
+if (error) {
+    console.error("Erreur ajout repas :", error);
+    alert("Impossible d'ajouter le repas.");
+    return;
+}
 
-    champNom.value = "";
-    champIngredients.value = "";
+champNom.value = "";
+champIngredients.value = "";
 
-    sauvegarderRepasBibliotheque();
-    afficherBibliothequeRepas();
+await chargerRepasBibliotheque();
 }
 
 
@@ -1331,54 +1428,124 @@ function afficherBibliothequeRepas() {
         return;
     }
 
-    repasBibliotheque.forEach((repas, index) => {
+    const categories = [
+        {
+            nom: "Pâtes",
+            titre: "🍝 Pâtes"
+        },
+        {
+            nom: "Plats traditionnels",
+            titre: "🍲 Plats traditionnels"
+        },
+        {
+            nom: "Plats à emporter",
+            titre: "🥡 Plats à emporter"
+        }
+    ];
 
-        const carte =
-            document.createElement("div");
+    categories.forEach(categorie => {
 
-        carte.className = "card";
+        const repasCategorie = repasBibliotheque
+            .map((repas, index) => ({ repas, index }))
+            .filter(element => element.repas.categorie === categorie.nom);
 
-        const ingredientsHTML =
-            repas.ingredients.length > 0
-            ? repas.ingredients
-                .map(ingredient => `<li>• ${ingredient}</li>`)
-                .join("")
-            : "<li>Aucun ingrédient</li>";
+        const section = document.createElement("div");
 
-        carte.innerHTML = `
-
-            <h2>🍽️ ${repas.nom}</h2>
-
-            <strong>Ingrédients</strong>
-
-            <ul>
-                ${ingredientsHTML}
-            </ul>
-
-            <div style="
-                display:flex;
-                gap:8px;
-                margin-top:15px;
+        section.innerHTML = `
+            <h2 style="
+                margin-top:25px;
+                margin-bottom:12px;
             ">
-
-               <button
-    onclick="modifierRepasBibliotheque(${index})">
-    ✏️ Modifier
-</button> 
-
-                <button
-                    class="supprimer"
-                    onclick="supprimerRepasBibliotheque(${index})">
-                    🗑️
-                </button>
-
-            </div>
+                ${categorie.titre}
+            </h2>
         `;
 
-        zone.appendChild(carte);
+        zone.appendChild(section);
+
+        if (repasCategorie.length === 0) {
+
+            const vide = document.createElement("div");
+
+            vide.className = "card";
+
+            vide.innerHTML = `
+                <p class="message-vide">
+                    Aucun repas dans cette catégorie.
+                </p>
+            `;
+
+            zone.appendChild(vide);
+
+            return;
+        }
+
+        repasCategorie.forEach(element => {
+
+            const repas = element.repas;
+            const index = element.index;
+
+            const carte =
+                document.createElement("div");
+
+            carte.className = "card";
+
+            const ingredientsHTML =
+                repas.ingredients.length > 0
+                ? repas.ingredients
+                    .map(ingredient => `<li>• ${ingredient}</li>`)
+                    .join("")
+                : "<li>Aucun ingrédient</li>";
+
+            carte.innerHTML = `
+
+                <h2>🍽️ ${repas.nom}</h2>
+
+                <details style="
+                    background:#f5f5f7;
+                    border-radius:12px;
+                    padding:12px 15px;
+                    margin-top:10px;
+                ">
+
+                    <summary style="
+                        cursor:pointer;
+                        font-weight:600;
+                    ">
+                        🥕 Ingrédients (${repas.ingredients.length})
+                    </summary>
+
+                    <ul style="margin-top:12px;">
+                        ${ingredientsHTML}
+                    </ul>
+
+                </details>
+
+                <div style="
+                    display:flex;
+                    gap:8px;
+                    margin-top:15px;
+                ">
+
+                    <button
+                        onclick="modifierRepasBibliotheque(${index})">
+                        ✏️ Modifier
+                    </button>
+
+                    <button
+                        class="supprimer"
+                        onclick="supprimerRepasBibliotheque(${index})">
+                        🗑️
+                    </button>
+
+                </div>
+            `;
+
+            zone.appendChild(carte);
+        });
     });
 }
-function modifierRepasBibliotheque(index) {
+
+async function modifierRepasBibliotheque(index) {
 
     const repas = repasBibliotheque[index];
 
@@ -1403,6 +1570,31 @@ function modifierRepasBibliotheque(index) {
 
     if (nouveauxIngredients === null) return;
 
+    const nouvelleCategorie = prompt(
+    "Catégorie :\n\n" +
+    "1 = 🍝 Pâtes\n" +
+    "2 = 🍲 Plats traditionnels\n" +
+    "3 = 🥡 Plats à emporter",
+    repas.categorie === "Pâtes" ? "1" :
+    repas.categorie === "Plats traditionnels" ? "2" :
+    repas.categorie === "Plats à emporter" ? "3" : ""
+);
+
+if (nouvelleCategorie === null) return;
+
+let categorie;
+
+if (nouvelleCategorie === "1") {
+    categorie = "Pâtes";
+} else if (nouvelleCategorie === "2") {
+    categorie = "Plats traditionnels";
+} else if (nouvelleCategorie === "3") {
+    categorie = "Plats à emporter";
+} else {
+    alert("Choisis 1, 2 ou 3 pour la catégorie.");
+    return;
+}
+
     const ingredients = nouveauxIngredients
         .split(",")
         .map(ingredient => ingredient.trim())
@@ -1410,32 +1602,41 @@ function modifierRepasBibliotheque(index) {
 
     const ancienNom = repas.nom;
 
-    repas.nom = nomNettoye;
-    repas.ingredients = ingredients;
+    const { error } = await supabaseClient
+        .from("repas")
+        .update({
+    nom: nomNettoye,
+    ingredients: ingredients,
+    categorie: categorie
+})
+        .eq("id", repas.id);
 
-    /* Si le repas était déjà utilisé dans le planning,
-       on met également son nom à jour */
+    if (error) {
+        console.error("Erreur modification repas :", error);
+        alert("Impossible de modifier le repas.");
+        return;
+    }
 
-    Object.keys(planning).forEach(date => {
+    /* Si ce repas est utilisé dans le planning,
+   on met également son nom à jour. */
 
-        if (planning[date] === ancienNom) {
-            planning[date] = nomNettoye;
-        }
+    const { error: erreurPlanning } = await supabaseClient
+    .from("planning")
+    .update({ repas: nomNettoye })
+    .eq("repas", ancienNom);
 
-    });
-
-    localStorage.setItem(
-        "planning",
-        JSON.stringify(planning)
+if (erreurPlanning) {
+    console.error(
+        "Erreur mise à jour du planning :",
+        erreurPlanning
     );
-
-    sauvegarderRepasBibliotheque();
-
-    afficherBibliothequeRepas();
-    afficherCalendrier();
 }
 
-function supprimerRepasBibliotheque(index) {
+await chargerRepasBibliotheque();
+await chargerPlanning();
+}
+
+async function supprimerRepasBibliotheque(index) {
 
     if (!confirm(
         "Supprimer ce repas de ta bibliothèque ?"
@@ -1443,10 +1644,20 @@ function supprimerRepasBibliotheque(index) {
         return;
     }
 
-    repasBibliotheque.splice(index, 1);
+    const repas = repasBibliotheque[index];
 
-    sauvegarderRepasBibliotheque();
-    afficherBibliothequeRepas();
+    const { error } = await supabaseClient
+        .from("repas")
+        .delete()
+        .eq("id", repas.id);
+
+    if (error) {
+        console.error("Erreur suppression repas :", error);
+        alert("Impossible de supprimer le repas.");
+        return;
+    }
+
+    await chargerRepasBibliotheque();
 }
 
 
