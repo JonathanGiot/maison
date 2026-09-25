@@ -642,6 +642,7 @@ async function initialiserMaison(session) {
     await chargerPlanning();
 
     activerTempsReelCourses();
+    activerTempsReelRepas();
 }
 
 async function seConnecter() {
@@ -767,6 +768,33 @@ function activerTempsReelCourses() {
         .subscribe((status) => {
             if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
                 console.error("Erreur Realtime Courses :", status);
+            }
+        });
+}
+
+
+// Synchronisation des repas en temps réel
+let canalRepas = null;
+
+function activerTempsReelRepas() {
+    if (canalRepas) return;
+
+    canalRepas = supabaseClient
+        .channel("repas-realtime")
+        .on(
+            "postgres_changes",
+            {
+                event: "*",
+                schema: "public",
+                table: "repas"
+            },
+            async () => {
+                await chargerRepasBibliotheque();
+            }
+        )
+        .subscribe((status) => {
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+                console.error("Erreur Realtime Repas :", status);
             }
         });
 }
