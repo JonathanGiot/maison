@@ -672,13 +672,16 @@ async function verifierConnexion() {
         await chargerCourses();
         await chargerRepasBibliotheque();
         await chargerPlanning();
+
+        console.log("SESSION OK - lancement Realtime");
+        
         activerTempsReelCourses();
     } else {
         document.getElementById("ecranConnexion").style.display = "flex";
     }
 }
 
-window.addEventListener("DOMContentLoaded", verifierConnexion);
+
 
 /* --------------------
    NAVIGATION
